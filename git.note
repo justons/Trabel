@@ -1,9 +1,12 @@
 git status		查看git的状态
 git diff filename		查看某文件当前与上次提交有那些不同
 git add filename		添加将被修改的文件
+git add *		批量添加被修改文件，或使用模糊匹配
 git commit -m "notes"		提交修改
 git log		查看提交历史
 git log --pretty=oneline		每次提交历史显示在一行
 git reset --hard head^		其中head^为上一个版本，head^^为上上一个版本，head～100为之前第100个版本
 git reset HEAD filename		丢弃暂存区的修改，把暂存区的内容删掉，重新返回暂存区
 git reflog		查看命令历史
+
+git push		向远程推送文件
