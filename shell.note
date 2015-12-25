@@ -1,0 +1,312 @@
+shell命令
+0.ubuntu常识
+ Ubuntu命令行终端中复制粘贴的快捷键是ctrl+shift+c和ctrl+shift+v
+ 在 Linux 系统中，~ 代表的是用户的主目录，即 “/home/用户名” 这个目录
+1.PS1常用字符
+ \h The local hostname
+ \H The fully qualified domain hostname
+ \t The current time in 24-hour HH:MM:SS format
+ \T The current time in 12-hour HH:MM:SS format
+ \@ The current time in 12-hour am/pm format
+ \u The username of the current user
+ \w The current working directory
+ \W The basename of the current working directory
+2.ls命令
+ -F 对文件夹做出标记，文件夹名后加/
+ -a 列出隐藏文件
+ -R 递归列出文件夹中的子文件
+3.文件管理
+cp 文件复制-p 复制源文件保留文件的创建者、创建时间 -R 递归复制文件及子文件的内容
+rmdir 删除空目录
+rm -r 递归的删除目录和文件
+rm -rf 强制递归删除
+4.incov字符转换
+file 命令可以查看文件类型，文本文件、可执行文件、数据文件
+ file filename可以查看文本文件字符编码格式
+ incov -f gbk -t utf8 inputfile>outputfile可以将输入文件的文件格式从gbk转换为utf8，-f为fromcode，-t为tocode，输出前面可加-c 从输出中忽略无效的字符，--verbose 打印进度信息
+5.sort排序
+ sort将文件的每一行作为一个单位，相互比较，比较原则是从首字符向后，依次按ASCII码值进行比较，最后将他们按升序输出。-u去重，-r降序，-n以字符串数值来排序（不会转换为浮点数），-g浮点数排序，-t指定分隔符，-k指定用哪一列来进行排序，-k1.2则是按照第一个域的第二个字符开始排序，-k1.2,1.3按照第一列的第二、三个字符进行排序，-f忽略大小写。
+ 例如sort -k 2g -k 3nr rs1命令sort默认以空格分隔，即第二列按浮点数进行排序，第二列相同则第三列按整数值降序排序
+6.文件权限管理
+有 ls -l的结果如下：
+-rw-r--r-- 1 root   root    264 12月 12 17:11 argct.c
+-rw-r--r-- 1 root   root    242 12月 12 17:11 argvt.c
+其中输出的第一个字符为文件类型，如-为文件，d为目录，l代表连接等，之后的三组三个字符分别代表对应对象的三个安全级别，对象的属主、对象的属组、系统其他用户，每组三个字符分别代表可读权限、可写权限、可执行权限。
+chmod为文件添加读写执行权限，有两种使用方式：
+chmod 777 file1 这种以八进制形式设置比较直观
+chmod ugoa+-wrx filename 以符号形式设置权限，其中u代表用户，g代表组，o代表其他，a代表上述素有，+代表添加权限，-代表删除权限。例如为某一用户或某一用户组添加文件权限chmod u+w filenmae，chmod g+x filename，chmod o+r filename  
+chown 改变文件的属主，chown username|UID filename
+chgrp 改变文件的属组，chgrp groupname|GID filename
+7.搜索
+find /home -name "*.txt"  #在home目录下查找txt文件
+find /home -iname "*.txt" #同上，但忽略大小写
+find /home ! -name "*.txt"  #在home目录下查找非txt文件
+find . -name "*.txt"      #在当前目录及其子目录下查找txt文件
+find /usr/ -path "*local*" #匹配文件路径或文件
+find . -type f "shell"    #根据类型查找，其中f为类型参数，即文件，其他还有d-目录，c-字符设备，s-套接字等
+find . -type f -size +10k #搜索大于10k的文件，size参数还可以为M，G等
+8、进程管理
+ps 默认情况下只会显示当前控制台下属于当前用户的进程
+ps -ef 以完整格式显示所有进程
+ps -efH 以树状的形式显示进程间启动关系
+ps -ef --forest 同样以树状形式显示进程启动关系
+top 实时监控进程
+kill pid 结束进程
+9、检测磁盘空间
+df 查看所有已挂载磁盘的使用情况，可用参数 -k -m -h
+du 显示某个特定目录的磁盘使用情况 可用参数-h以合理单位列出文件大小 -c列出合计大小
+du默认值列出文件夹，可以使用 du × 列出所有文件及文件夹，或者du *.txt列出某一类文件中每个大小
+du ×|sort -nr 按照文件大小降序排列文件
+10、正则
+grep -v显示不匹配的行，-n显示行号
+grep -e pattern1 -e pattern2 file1 搜索匹配pattren1或pattern2任一模式的行
+grep [USA|America] file1在grep中使用正则表达式
+egrep 支持更多扩展的正则表达式
+11、日期与时间
+date +%y年%m月%d日 可以格式化出“15年12月19日”形式的日期
+
+
+
+
+
+
+
+
+
+
+
+shell脚本编程
+一、基本脚本
+引用变量都需要使用美元符号$，在赋值语句中也是如此
+value1=10；value2=$value1 #多个命令间可以用分号间隔
+如果在shell中要将命令的输出值赋给一个变量，需要用到反引号``，例如value1=`date`
+在bash中，将一个数学运算结果赋值给某个变量时，可以使用美元符号和方括号将数学表达式圈起来
+var1=$[1+5];var2=$[$var1*2]
+bash shell能处理的数仅有整数。解决bash中数学运算的整数限制方法之一是用内建的bc计算器，浮点运算是由一个内建的scale变量控制的，必须将这个值设为运算结果中需要保留的小数位数
+echo "scale=4;3.44/5"|bc
+shell中运行的每个命令都使用退出状态码来告诉shell它完成了处理，退出状态码为一个0~255之间的数值，在命令结束时由命令传给shell，可以捕获并在脚本中使用这个值。Linux提供了$?专属命令来保存上个执行的命令的退出状态码。默认情况下，shell脚本会以脚本中最后一个命令的退出状态码退出，也可以用exit命令指定一个退出状态码
+二、结构化命令
+1.ifthen条件结构
+if command      或者   if command；then
+then                      commands
+   commands           fi
+fi
+如果if后command命令的退出状态码为0，即该命令成功执行，then部分的命令就会被执行，否则then部分会被跳过类似的还有
+if command      或者   if command1
+then		       then
+   commands		 commands
+else		       elif command2
+   commands	       then
+fi			 more commands
+		       fi
+为了测试与命令退出状态码无关的其他事件，shell提供了test命令，条件成立，test返回状态码0，否则返回1，例如
+if test condition   或者  if [ condition ]   #方括号中定义了test命令中用到的条件,condition与[]之间要有空格
+then			  then
+   commands		     commands
+fi			  fi
+test命令可以判断三类条件：数值比较、字符串比较、文件比较。test命令中的数值比较可用条件参数如下：
+n1 -eq n2  检查n1是否等于n2
+n1 -ge n2  检查n1是否大于等于n2
+n1 -gt n2  检查n1是否大于n2
+n1 -le n2  检查n1是否小于等于n2
+n1 -lt n2  检查n1是否小于n2
+n1 -ne n2  检查n1是否不等于n2
+test命令中的字符串比较条件参数如下
+str1 = str2    检查str1是否与str2相同
+str1 != str2   检查str1是否和str2不同
+str1 < str2    检查str1是否比str2大，单测试条件中的>必须进行转义，否则会被shell当做输出重定向
+str1 > str2    检查str1是否比str2小
+-n str         检查str的长度是否非0
+-z str         检查str的长度是否为0
+注意test命令会根据标准的ASCII数值累决定字母排序顺序，即大写字母在小写字母前，而sort命令可能会本局本地化设置而将小写字母排在大写字母前
+test命令还可以用来检查文件系统上文件和目录的状态，文件比较可用条件参数如下
+-d file		检查file是否存在并是一个目录
+-e file		检查file是否存在
+-f file		检查file是否存在并是一个文件
+-s file		检查file是否存在并且非空
+-r file		检查file是否可读	
+-w file		可写
+-x file		可执行
+-O file		检查file是否存在并属于当前用户
+-G file		检查file是否存在并且默认组与当前用户相同
+file1 -nt file2 检查file1是否比file2新
+file1 -ot file2 检查file1是否比file2旧
+if-then语句中还允许使用布尔条件测试，有两种布尔条件测试语句可以用，如
+[ condition1 ] && [ condition2 ]
+[ condition1 ] || [ condition2 ]
+if-then语句中还有两项高级特性(仅能在if-then语句中使用)：
+用于数学表达式的双括号 ((expression)),这里的表达式可以使用自增自减运算，幂运算**移位运算>>等，且需要转义。
+用于高级字符串处理功能的双方括号 [[expression]]，这里可以使用正则表达式来匹配字符串，如if [[ $USER == r* ]]
+2.case语句
+case语句可以用来检查单个变量列表格式的多个值，而不用在if语句中写很多elif来判断，如
+case variable in
+pattern1 | pattern2) commands1;;
+pattern3) commands2;;
+*) commands;;
+esac
+3.for语句
+for var in list   或者  for var in list;do
+do			   commands
+  commands		done
+done
+向已有变量列表list中添加一个值的方法为list=$list"another variable"。for语句假定list中每个值都是空格分割的，如果在单独的数据值中有空格需要使用双引号扩起来。但如果从文件或其他源读入的变量中有空格，前述方法显然不行。原因是特殊的shell环境变量IFS定义了字段分隔符的一序列字符，默认情况下shell会将空格、制表符、换行符作为分隔符。可以在脚本中临时改变IFS的值，如
+IFS.OLD=$IFS
+IFS=$'\n'
+do something
+IFS=$IFS.OLD
+这样在后续脚本处理中去报了分隔符只能是换行符，如果有多个分隔符，只要将他们在赋值行串起来进行，IFS=$'\n,:',这样换行符，冒号，逗号都将成为分隔符。
+shell还提供C语言风格的for语句，需要注意的是该用法种条件中的变量不以美元符号开头，迭代过程的算式未使用expr命令格式，如
+for (( i=1;i<10;i++))
+do
+  echo "The next number is $i"
+done
+C语言风格的for命令允许为迭代使用多个变量，循环会单独处理每个变量。例如
+for((a=1,b=10;a<=10;a++,b--))
+do
+  echo "a is $a and b is $b now"
+done
+4.while语句
+while语句允许你定义一个要测试的命令，然后循环执行一组命令。while命令的关键是test命令的退出状态码必须随着循环中运行的命令而改变，否则会陷入死循环。格式如
+while test command
+do
+  other commands
+done
+5、until语句
+until语句和while语句的工作方式相反，until命令要求指定一个通常输出非零退出状态码的测试命令，只有测试命令的退出状态码非零，才会执行循环中列出的命令。
+until test commands
+do
+  other commands
+done
+6.循环控制命令
+有两个循环控制命令来控制循环内部的执行情况，为break命令和continue命令
+可以在循环中的尾部done后面添加一个输出重定向，从而将循环的输出重定向到文件等
+三、处理用户输入
+1.输入选项和参数
+shell将称为位置参数的特殊变量分配给命令行输入的所有参数，$0是程序名，$1是第一个参数，$2是第二个参数，直至第九个参数$9,参数间仍用空格分开，因此遇到有空格的入参需要用引号扩起来(单引号，双引号均可)。如果参数多于9个，必须使用${10}的格式来引用第九个以后的参数。用$0引用程序名时如果传给$0变量的是真个脚本的绝对路径，程序中就会用绝对路径，如果是相对路劲，程序中就会用相对路径，但是使用命令basename可以返回程序名而不包含路径，例如 name=`basename $0`
+特殊变量$#中含有脚本运行时的命令行参数个数，可以在脚本任何地方跟普通变量一样使用这个特殊变量。命令行最后一个参数可以用${!#}的格式进行引用。
+$*和$@变量提供了对所有参数的快速访问，这两个都在单个变量中存储所有的命令行参数，$*将所有入参当做一个参数存储，$@会将所有入参当做单个参数，单独处理每个参数。
+2.输入变量
+read命令接受从标准输入或另一个文件描述符的输入，例如
+echo -n "Enter your name："
+read name
+echo后加-n选项可以使输出不换行，用户输入的变量会被保存在name中。另外read命令自带了-p选项，允许直接在read命令行指定提示符，如
+read -p "Please enter your age：" age
+如果需要输入多个变量，可以为read指定多个变量，输入的每个数据值都会分配给表中的下一个变量，如果变量不够用，剩下的数据都会分配给最后一个变量。如
+read -p "Enter your name：" firstn lastn
+也可以在read中不指定变量，则read命令会将它收到的任何数据都放进特殊环境变量REPLY中。
+使用read命令时脚本可能会处于一直等待用户输入的状态，可以指定-t选项来指定一个计时器，-t指定了read命令等待输入的秒数，当计时器过期后，read会返回一个非零退出状态码。如
+read -t 5 -p "Please enter your password in 5 seconds:" password
+某些情况例如输入密码时需要读取用户输入却不想输入显示在屏幕上，可以使用-s选项，它会阻止传给read的数据显示在屏幕上，如
+read -s -p "Please enter your password:" password
+Linux系统将每个对象当做文件来处理，包括输入和输出的过程，用文件描述符来标识每个文件对象，文件描述符为非负整数，可以唯一地标识会话中打开的文件，每个过程一次最多可以打开9个文件，shell保留了0,1,2三个文件描述符，分别为标准输入、标准输出和标准错误。
+3.输入输出重定向
+有两种方法来在脚本中重定向输出：
+临时重定向每行输出，在重定向到文件描述符时，必须在文件描述符前加一个&字符，例如
+echo "This is an error message">&2
+默认情况下Linux会将STDERR定向到STDOUT，但是，如果在运行脚本时重定向了STDERR，脚本中所有定向到STDERR的文本都会被重定向，例如 ./myscript 2>err.out
+永久重定向脚本中所有命令,如果脚本中有大量数据要重定向，临时重定向每个echo语句就会很繁琐，可以使用exec命令告诉shell在脚本执行期间重定向某个特定文件描述符。例如
+exec 1>out.trace
+echo "this is a test text"
+echo "this is another test text"
+同样可以将STDIN从键盘重定向到其他位置，exec命令允许将STDIN重定向到Linux系统上的文件中，如
+exec 0<testfile
+有时将输出一边发送到显示器一边发送到日志文件，不用输出重定向两次，用tee命令就可以实现，它将从STDIN过来的数据同时发给连个目的地，一个是STDOUT，一个是tee所指定的文件名。如
+date|tee -a out.log #参数-a表示追加，否则会覆盖
+Linux系统提供了一个特殊的文件（/dev/null）来重定向不需要的输出，Linux系统会删掉任何重定向到/dev/null文件的内容
+四、控制脚本
+1.Linux信号
+Linux系统和应用程序可以产生超过30种信号，常见的如下
+1	SIGHUP		挂起进程
+2	SIGINT		终止进程
+3	SIGQUIT		停止进程
+9	SIGKILL		无条件终止进程
+15	SIGTERM		可能的话终止进程
+17	SIGSTOP		无条件停止进程，但不终止进程
+18	SIGTSTP		停止或暂停进程，但不终止进程
+19	SIGCONT		继续运行停止的进程
+shell允许键盘上的组合键产生两种基本的Linux信号，Ctrl+C会生成SIGINT信号，并将其发送给当前运行的所有进程。Ctrl+Z会产生一个SIGTSTP信号，停止shell中运行的任何进程。停止一个进程和终止一个进程不同，停止进程会让程序继续保留在内存中，并能从上次停止的位置继续运行。
+ps -au 命令中STAT栏为"T"的进程就是被停止的进程
+当前进程号PID可由特殊变量$$获取
+kill -9 7193 向pid为7193的进程发送一个SIGKILL信号来终止它
+trap命令允许指定shell脚本要观察哪些Linux信号并从shell中拦截，如果脚本收到了trap命令中列出的信号，它会阻止它被shell处理，而在本地处理它。trap命令的格式是trap commands signals
+trap "echo 'Sorry!I have trapped Ctrl+c.'" SIGINT 
+这样当脚本运行期间每次检测到SIGINT信号时都会显示一行简单的文本消息，并阻止用户用键盘的ctrl+c命令来停止程序。
+除了在脚本中扑捉信号，也可以在shell脚本退出时扑捉他们，这时在shell完成任务时执行命令的简单方法。如
+trap "echo byebye" EXIT
+如此，每次脚本常规退出时扑捉就会被触发，从而输出一个字符串
+2、后台模式运行脚本
+要在命令行界面以后台模式运行脚本，只要在命令后加一个&标识符就行了，如
+./myscript &
+在这种方式下，当后台进程仍在运行时，他仍会用终端显示器来显示STDOUT和STDERR消息，且每个后台进程都绑定到了该终端回话上的终端上，一旦进程回话退出，后台进程也会退出。为了在会话中启动shell脚本，然后让脚本一直以后台模式运行，直到完成，即使退出终端回话也不会终止后台进程，可以使用nohup命令来实现。如
+nohup ./myscript &
+由于nohup会解除进程关联，进程会丢掉到STDOUT和STDERR的连接，为了保存该命令的输出，nohup会自动将消息重定向到一个名为nohup.out的文件中。
+3.作业控制
+启动、停止、无条件停止以及恢复作业的这些功能成为作业控制。
+jobs命令可以查看当前正在处理的作业，参数有：-l列出进程的PID以及作业号，-p只列出作业的PID，-r只列出运行中的作业，-s只列出已停止的作业。jobs命令中输出的带加号的作业为默认作业，带减号的作业为下一个默认作业，任何时候都只有一个带加号的作业和一个带减号的作业。
+$ jobs -l
+[3]   Running                 ./back &
+[4]   Stopped                 ./back
+[5]   Stopped                 ./back
+[6]-  Stopped                 ./tacb
+[7]+  Stopped                 ./tacb
+要以后台模式重启一个作业，可用bg命令加上作业号，前台模式重启作业，可用fg加上作业号。
+nice命令允许你在启动时调整一个命令的调度优先级（-20到20，值越小优先级越高），只要用nice的-n参数来指定新的优先级即可。但是nice会阻止普通用户来增加命令的优先级。调低作业优先级可用renice命令。
+at命令可指定定时作业，at命令允许指定系统何时运行脚本，at命令会将作业提交到队列中。at命令的格式 at [-f filename] time,通过at命令提交的作业没有屏幕会关联到该作业，系统会将提交该作业的用户的e-mail地址作为STDOUT和STDERR，任何发送到标准输出和标准错误的数据都会通过邮件系统发送给作业提交者，atq可以列出等待的作业，atrm 作业号可以删除队列中的作业
+at只能完成一次性的定时作业，为了完成持续多次的定时作业可以使用cron时间表。cron时间表的格式为
+min hour dayofmonth month dayofweek command
+cron时间表允许用特定值、值范围或者通配符来指定定时调度条目，例如
+15 10 * * * /home/jusotn/test>trace.out  #每天10:15运行command
+15 16 * * 1 command  			 #每周一16:15运行
+00 12 1 * * command  			 #每月第一天12:00运行
+Linux提供了crontab命令来处理cron时间按表，crontab -l可以列出所有的cron时间表
+五、创建函数
+在shell中创建函数有两种方式:
+function name{    或者  name(){
+  commands               commands
+}			}
+函数运行结束时会返回一个退出状态码，有3中方式来为函数生成退出状态码：默认情况下，函数的退出状态码是函数中最后一条命令返回的退出状态码；使用return命令来退出函数并返回特定的退出状态码；将函数的输出保存到shell变量中，可以用这种方法来获得任何类型的函数输出。例如：
+function rval{
+  read -p "Enter a value:" value
+  echo $[$value+1]
+}
+result=`rval`
+同普通shell命令一样，函数可以使用标准的参数环境变量来代表命令行上传递给函数的参数。
+如果变量在函数外定义并被初始化，在函数内部被修改并被赋予新的值，然后在脚本中引用该变量时，新值依然有效。为了不在函数中使用全局变量，函数内部使用的任何变量都可以被声明为局部变量，只需在变量声明前加上local关键字即可。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

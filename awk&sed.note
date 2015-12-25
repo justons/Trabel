@@ -1,0 +1,136 @@
+awk笔记【2015年11月29日 星期日 14时40分33秒】
+一、awk常用知识点
+（1）awk小常识
+awk与其执行命令之间要有空格如awk ‘{print}’ filename
+$0代表全行，默认print可以不带参数，打印全行
+awk中字符串连接可以直接使用空格，如print s1 s2即打印s1与s2连接的结果
+awk中变量不需预定义，字符串变量默认初始化为“”，数字变量初始化为0
+expression～/regexpr/表示表达式与正则表达式相匹配，！～表示不匹配
+（2）awk内置变量：
+ARGC		命令行参数个数
+ARGV		命令行参数，ARGV[ARGC-1]为命令行最后一个参数
+FILENAME	当前输入文件名
+FNR		file number record(row)当前文件行数
+FS		field separator列分隔符，默认为空格
+RS		record separator输入行分隔符
+NF		number of fields当前行列数
+OFMT		output format for numbers默认数字输出格式化的形式，默认为“%。6g”
+OFS		output fiels separater输出列分隔符，默认空格
+ORS		output record separator输出行分隔符，默认“\n”
+SUBSEP		subscript seperator
+（3）awk函数
+数学函数:atan2(y,x),cos(x),exp(x),int(x),log(x),rand(),sin(x),sqrt(x),srand(x),其中rand()产生[0,1)的随机数
+字符串函数：gsub，index，length，match，split，sprintf，sub，substr等
+（4）awk命令行模式
+awk ‘program’ f1 f2...
+awk -f progfile f1 f2...      #执行progfile中的awk程序
+awk -Fsep 'program' f1 f2...  #sep指定了输入文件的列分隔符
+awk -Fsep -f progfile f1 f2...
+二、awk语法
+awk程序有一系列模式pattern和动作action组成，awk、一次读入一行数据，按顺序执行pattern-action组合
+pattern {action}
+pattern {action}
+...
+pattern控制action是否执行，当满足pattern条件时关联的action才会执行。
+其中pattern有如下几种：
+（1）BEGIN{statements}               #各个statement之间用分号；分隔
+（2）END{statements}		    #所有行处理结束之后才执行
+（3）expression{statements}
+（4）/regular expression/{statements}#可用/r1/,/r2/表示范围，即匹配r1的行到匹配r2的行
+（5）compound pattern{statements}    #条件组合，例如￥1>100&&$2～/[0-9]/
+（6）pattern1,pattern2{statements}   #表示范围，匹配pattern1的行到匹配pattern2的行
+而action可以有如下几种：
+（1）print，printf
+（2）if语句，while语句，for语句，dowhile语句,next,continue等
+流程控制语句与C语言类似，其中对数组变量和索引的应用可以使用for(variable in arry)的形式，variable为array中索引的值.而next则可以使跳过当前记录的后续处理，直接处理下一条记录
+例如array["asia"]=1,array["europe"]=2,则variable即“asia”、“europe”等。
+    /^check/  {ck=1;next}  #处理1
+    /^deposit/{dep=1;next} #处理2
+    /^$/      {print}      #处理3
+则每一条记录都会经过上述处理1或处理2和处理3的处理流程。
+awk默认输出到标准输出，也可以输出到文件或者输出到管道：
+print expression，expression2，...>outputfile  #覆盖模式
+print expression，expression2，...>>outputfile #追加模式
+print expression，expression2，...|outputfile  #管道模式
+三、AWK用例
+1、统计搜狗搜索用户查询日志的高频搜索词，数据格式为
+访问时间\t用户ID\t[查询词]\t该URL在返回结果中的排名\t用户点击的顺序号\t用户点击的URL
+awk '{x[$3]++}END{for(name in x) print x[name],name}' sogouq.reduced |sort -n -r|head 或者
+awk '{x[$3]++}END{for(name in x) print name,x[name]}' sogouq.reduced |sort -n -r -k2 |head
+2、统计每天创建的文件/日志个数，格式如
+-rw-r--r-- 1 root   root    264 12月 12 17:11 argct.c
+-rw-r--r-- 1 root   root    242 12月 12 17:11 argvt.c
+ls -l|awk 'NR!=1{x[$6 $7]++}END{for(var in x)print x[var],var}'
+
+
+
+sed笔记
+一、基本命令
+sed命令的格式：
+sed [options] 'command' file(s) 
+sed [options] -f scriptfile file(s)
+另外在sed中可以组合多个表达式，如：sed ‘expression1’|sed ‘expression2’等价于sed ‘expression1；expression2’
+-e选项允许在同一行里执行多条命令 sed -e ‘1,5d’ -e ‘s/test/check/’ file
+与-e等价的命令是--expression：sed --expression=‘1,5d’ --expression=‘s/test/check/’ file
+
+sed命令
+a\ 在当前行下面插入文本。 
+i\ 在当前行上面插入文本。 
+c\ 把选定的行改为新的文本。 
+d 删除，删除选择的行。 
+D 删除模板块的第一行。 
+s 替换指定字符 
+h 拷贝模板块的内容到内存中的缓冲区。 
+H 追加模板块的内容到内存中的缓冲区。 
+g 获得内存缓冲区的内容，并替代当前模板块中的文本。 
+G 获得内存缓冲区的内容，并追加到当前模板块文本的后面。 
+l 列表不能打印字符的清单。 
+n 读取下一个输入行，用下一个命令处理新的行而不是用第一个命令。 
+N 追加下一个输入行到模板块后面并在二者间嵌入一个新行，改变当前行号码。 
+p 打印模板块的行。 
+P(大写) 打印模板块的第一行。 
+q 退出Sed。 
+b lable 分支到脚本中带有标记的地方，如果分支不存在则分支到脚本的末尾。 
+r file 从file中读行。 
+t label if分支，从最后一行开始，条件一旦满足或者T，t命令，将导致分支到带有标号的命令处，或者到脚本的末尾。 
+T label 错误分支，从最后一行开始，一旦发生错误或者T，t命令，将导致分支到带有标号的命令处，或者到脚本的末尾。 
+w file 写并追加模板块到file末尾。 
+W file 写并追加模板块的第一行到file末尾。 
+! 表示后面的命令对所有没有被选定的行发生作用。 
+= 打印当前行号码。 
+# 把注释扩展到下一个换行符以前。 
+二、基本操作
+1、替换操作：s命令 
+sed 's/book/books' file #输出替换的结果，不会改变文件原内容
+-n选项和p命令一起使用表示只打印那些发生替换的行： 
+sed -n 's/test/TEST/p' file 
+直接编辑文件选项-i，会改变原文件内容： 
+sed -i 's/book/books/g' file                #其中/g为全局替换标记
+sed -i 's/book/books/2g' file               #其中/2g为从没一行中第二处开始替换余下的所有匹配
+echo this is a test line|sed ‘s/\w\+/[&]/g’ #其中&为已匹配字符串标记，\w\+匹配每一个单词，输出为 [this] [is] [a] [test] [line]
+echo aaa BBB | sed 's/\([a-z]\+\) \([A-Z]\+\)/\2 \1/' #其中\1,\2为子串匹配标记，输出为 BBB aaa
+2、删除操作：d命令
+sed ‘/^$/d’ file    #删除空行
+sed ‘2d’ file       #删除第二行
+sed ‘2,5d’ file     #删除第二到第五行，也可以通过正则表达式进行匹配来选定范围，如sed ‘/test/，/check/d’ file
+sed ‘2,$d’ file     #删除第二行到末尾所有行
+sed ‘$d’ file       #删除最后一行
+sed ‘/^test/d’ file #根据正则匹配规则删除行
+三、文件操作
+1、读入操作：r命令
+sed ‘/test/r file’ filename   #file文件的内容被读入显示在filename文件中匹配test的所有行后面
+sed ‘5r file’ filenname       #file文件内容被读入显示在filename文件第5行后面
+2、写入操作：w命令
+sed -n '/test/w file' example #example中所有包含test的行都被写入file中，回覆盖file文件中内容
+3.追加命令：a\
+sed '/^test/a\this is a test line'file #将语句插入到所有以test开头的行后面
+sed '2a\this is a test line'file       #将语句插入到第二行下面
+sed '2i\this is a test line'file       #将语句插入到第二行上面
+4.其他命令
+sed '/test/{ n; s/aa/bb/; }' file      #n为下一行命令，相当于next，如果当前行匹配test则将下一行的aa替换为bb
+sed '10q' file                         #q为退出命令，打印完第10行后退出
+四、sed用例
+打印奇数或偶数航
+sed -n ‘p；n’ file #打印奇数行
+sed -n ‘n；p’ file #打印偶数行
+
