@@ -10,3 +10,11 @@ git reset HEAD filename		丢弃暂存区的修改，把暂存区的内容删掉�
 git reflog		查看命令历史
 
 git push		向远程推送文件
+
+分支管理
+git branch		查看分支
+git branch <name>		创建分支
+git checkout <name>		切换分支
+git checkout -b <name>		创建并切换分支
+git merge <name>		合并某分支到当前分支
+git branch -d <name>		删除分支
