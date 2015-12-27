@@ -133,4 +133,6 @@ sed '10q' file                         #q为退出命令，打印完第10行后�
 打印奇数或偶数航
 sed -n ‘p；n’ file #打印奇数行
 sed -n ‘n；p’ file #打印偶数行
+sed '=' file|sed 'N;s/\n/ /' #为文件行号
+
 

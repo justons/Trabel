@@ -64,6 +64,9 @@ grep [USA|America] file1在grep中使用正则表达式
 egrep 支持更多扩展的正则表达式
 11、日期与时间
 date +%y年%m月%d日 可以格式化出“15年12月19日”形式的日期
+12、文件备份
+tar -cf archive.tar /Downloads/ #归档文件
+tar -zcf archive.tar.gz /Downloads/ 归档并压缩文件
 
 
 
@@ -141,9 +144,9 @@ if-then语句中还有两项高级特性(仅能在if-then语句中使用)：
 2.case语句
 case语句可以用来检查单个变量列表格式的多个值，而不用在if语句中写很多elif来判断，如
 case variable in
-pattern1 | pattern2) commands1;;
-pattern3) commands2;;
-*) commands;;
+pattern1 | pattern2) commands1 ;;
+pattern3) commands2 ;;
+*) commands ;;
 esac
 3.for语句
 for var in list   或者  for var in list;do
@@ -261,8 +264,8 @@ cron时间表允许用特定值、值范围或者通配符来指定定时调度�
 00 12 1 * * command  			 #每月第一天12:00运行
 Linux提供了crontab命令来处理cron时间按表，crontab -l可以列出所有的cron时间表
 五、创建函数
-在shell中创建函数有两种方式:
-function name{    或者  name(){
+函数必须先创建后调用，在shell中创建函数有两种方式:
+function name {    或者  name() {
   commands               commands
 }			}
 函数运行结束时会返回一个退出状态码，有3中方式来为函数生成退出状态码：默认情况下，函数的退出状态码是函数中最后一条命令返回的退出状态码；使用return命令来退出函数并返回特定的退出状态码；将函数的输出保存到shell变量中，可以用这种方法来获得任何类型的函数输出。例如：
@@ -273,6 +276,19 @@ function rval{
 result=`rval`
 同普通shell命令一样，函数可以使用标准的参数环境变量来代表命令行上传递给函数的参数。
 如果变量在函数外定义并被初始化，在函数内部被修改并被赋予新的值，然后在脚本中引用该变量时，新值依然有效。为了不在函数中使用全局变量，函数内部使用的任何变量都可以被声明为局部变量，只需在变量声明前加上local关键字即可。
+source命令用于加载库文件，快捷命令为 . sourcelib,例如 . ./myfunlib
+
+
+
+-----------------------------------------------------------------------------------------
+如果试图将数组变量当成一个函数参数，函数只会取数组变量的第一个值，要解决这个问题，必须将该数组变量分解成单个值然后将这些值作为函数参数使用，然后在函数内部再将参数重新组到新的数组变量中。例如：
+array=(1,2,3,4,5)
+function testarray{
+   local newarray
+   newarray=(`echo "$@"`)
+   echo "all of the array value is:${newarray[*]}"
+}
+testarray ${array[*]}
 
 
 
