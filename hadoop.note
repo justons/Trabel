@@ -1,0 +1,158 @@
+一、hadoop配置文件[伪分布式]
+1、hadoop-env.sh:修改JAVA_HOME的路径
+export JAVA_HOME=/usr/lib/jvm/jdk1.7.0_76
+2、hdfs-site.xml:添加副本数量，NameNode数据文件夹，DataNode数据文件夹
+ <configuration>
+  <property>
+    <name>dfs.replication</name>
+    <value>1</value>
+  </property>
+  <property>
+    <name>dfs.namenode.name.dir</name>
+    <value>file:/usr/local/lib/hadoop-2.7.1/temp/dfs/name</value>
+  </property>
+  <property>
+    <name>dfs.datanode.data.dir</name>
+    <value>file:/usr/local/lib/hadoop-2.7.1/temp/dfs/data</value>
+  </property>
+ </configuration>
+3、mapred-site.xml:如果mapreduce程序使用yarn框架运行需要添加如下配置
+<configuration>
+   <property>
+     <name>mapreduce.framework.name</name>
+     <value>yarn</value>
+   </property>
+</configuration>
+4.yarn-site.xml：yarn的ResourceManager和NodeManager的配置
+ <configuration>
+    <property>
+      <name>yarn.resourcemanager.hostname</name>
+      <value>NamenodeHostName</value>
+    </property>
+    <property>
+      <name>yarn.nodemanager.aux-services</name>
+      <value>mapreduce_shuffle</value>
+    </property>
+</configuration>
+5.slaves配置
+默认情况下slaves中内容为localhost，伪分布式下可不更改也可改为当前主机名。在分布式部署时，该文件中需要写入所有DataNode的主机名，以便start-dfs.sh时可以启动所有DataNode。当然start-yarn.sh启动时也会用到该配置文件启动所有NodeManager。start-dfs.sh用来启动Hdfs的NameNode，start-yarn用来启动Yarn的ResourceManager，两者一般不在统一主机上启动，因此这两台主机的slaves文件可能会不一样。slaves文件仅仅在启动集群时会用到，后续不会用到。
+
+如果更改了datanode的位置配置，导致namenode无法正常启动，需要删除temp/dfs/data下current文件夹中的VERSION文件，重新格式化namenode后在启动hdfs即可
+二、hdfs文件系统管理
+hadoop fs -help						#显示所有可用的文件管理命令行命令
+hadoop fs -put localfile hdfs://namenodeurl:9000	#上传文件到hdfs文件系统，类似copyFromLocal
+hadoop fs -get hdfs://namenodeurl:9000/remotefile	#从hdfs文件系统下载文件，类似copyToLocal
+hadoop fs -mkdir /wordcount/out				#在hdfs文件系统中创建文件夹
+hadoop fs -ls /wordcount				#列出hdfs文件系统中的文件
+hadoop fs -cat /wordcount/output.txt			#打印hdfs文件系统中的文件
+hadoop fs -cp fromfile tofile				#文件按拷贝
+hadoop fs -df [-h] directory				#查看可用空间
+hadoop fs -du [-s] [-h] directory			#查看目录下文件大小
+hadoop jar wc.jar org.apache.hadoop.mr.WoCo		#在hadoop集群中运行mapreduce作业[先启动hdfs和yarn]
+start-dfs.sh		#启动hdfs文件系统
+hadoop namenode -format		#格式化namenode
+start-yarn.sh		#启动yarn
+三、hadoop开发
+Hadoop中主要有两种角色NameNode和DataNode，NameNode负责数据和节点管理，DataNode负责数据存储
+四、Yarn基础
+Yarn中有两种角色ResourceManager和NodeManager，ResourceManager负责资源调度和节点管理，NodeManager负责执行具体的计算。
+五、Hadoop HA机制
+=====================================================================
+一、hive配置与架构
+1、Hive配置
+默认情况下Hive直接解压就可以使用:
+tar -zxvf apache-hive-1.2.1-bin.tar.gz -C /app/
+且默认情况下Hive会使用Derby来进行元数据存储，且在每一个启动Hive的当前文件夹建立一个存放元数据的文件夹么她store_db,为了统一配置metastore的存储位置，可以将metastore元数据存储在mysql数据库中，可在配置文件hive-site.xml中设置如下：
+<properties>
+  <property>
+    <name>javax.jdo.option.ConnectionURL</name>
+    <value>jdbc:mysql://myhostname:3306/hive?createDatabaseIfNotExist=true</value>
+  </property>
+  <property>
+    <name>javax.jdo.option.ConnectionDriverName</name>
+    <value>com.mysql.jdbc.Driver</value>
+    <!--同时需要将mysql驱动的jar包放到$HIVE_HOME/lib目录下-->
+  </property>
+  <property>
+    <name>javax.jdo.option.ConnectionUserName</name>
+    <value>root</value>
+  </property>
+  <property>
+    <name>javax.jdo.option.ConnectionPassword</name>
+    <value>root</value>
+  </property>
+</properties>
+Hive仅仅是将HQL语句解析为MapReduce操作提交给Hadoop运行，因此启动Hive前需先启动Hadoop中的hdfs，mapreduce服务，然后只需在需要运行Hive的单节点上启动Hive即可。
+启动Hive命令行模式 Hive CLI： $HIVE_HOME/bin/hive
+启动Hive的web页面： sh $HIVE_HOME/bin/hive --service hwi
+2、Hive系统架构：
+--元数据存储(Metastore)
+--驱动(Driver)
+  --编译器
+  --优化器
+  --执行器
+--接口
+  --CLI：命令行工具 bin/hive --service cli
+  --HWI:web访问接口 bin/hive --service HWI,端口9999
+  --ThriftServer
+--Hadoop
+  --用MapReduce进行计算
+  --用Hdfs进行存储
+Hive是建立在Hadoop上的数据仓库基础框架，HQL中对查询语句的解析、优化、生成查询计划是由Hive完成，元数据外的所有数据都是存储在Hadoop中，查询计划被转化为MapReduce任务，在Hadoop集群中执行，但是MapReduce计算过程中大量的中间磁盘落地过程消耗了大量的I/O，降低的运行效率，这也是Hive的瓶颈所在。Hadoop和Hive都是使用UTF8编码的。
+Hive将元数据存储在关系型数据库中，一般常用Mysql和Derby。
+二、HQL语法
+HQL的语法与Mysql语法类似
+查看数据库：show tables
+使用数据库：use tables #不指定的情况下默认使用default数据库
+建表：create table test(id int,name string)
+     row format delimited
+     fields terminated by '\t'; #Hive支持的字段类型很丰富，有INT，STRING，VARCHAR等。
+     #对于无法用统一的单个字符进行列划分的数据，还可以使用正则表达式来匹配数据的各列值：
+     create table sogouq(time string,uid string,keyword string,rank int,seqnum int,url string) 
+     comment "sogou query content" 
+     row format serde 'org.apache.hadoop.hive.serde2.RegexSerDe'
+                with serdeproperties("input.regex"="(.*)\t(.*)\t\\[(.*)\\]\t(.*) (.*)\t(.*)",
+                                     "output.format.string"="%1$s %2$s %3$s %4$s %5$s %6$s");
+建外部表：create external table  log_table(id int,msg string)
+         row format delimited fields terminated by '\t'
+         stored as textfile
+         location 'hdfs://localhost:9000/data/sogouq.reduced';
+外部表与普通表的区别在于，如果源数据文件在hdfs上，普通表load数据时会将源数据文件移至hive中表的目录下，且删除表时表的元数据及数据文件也同事会被删除。而外部表则可建立在业务正在操作(写入)的文件上，源数据文件不会被移动，且删除表时只删除表的元数据不删除文件。
+查看表信息：describe sogouq; #或者desc sogouq；
+删除表：drop table sogouq;
+建表语句会默认在hdfs根目录下建立/user/hive/warehouse/目录，default数据库中的表会在该目录下建立与表名相同的文件夹存储文件，如果新建了数据库，会在该目录下建立与数据库同名的文件夹，该数据库中的表会在其文件夹下建立对应的子文件夹。建完表后可以向表中加载数据，Hive一般不支单条或几条的数据插入，而是通过批量加载的形式向表中填入数据。向数据库中加载数据后，数据源文件会被上传到hdfs中该表的目录下。实际上向表中加载数据等同于使用hadoop fs -put sogouq.sample /user/hive/warehouse/sogouq/命令直接将文件上传至表对应的文件夹下。
+插入数据： insert into table test values('100','jack'),('101','lucy'); #这两条数据也会占用一个128M大小的block，造成存储空间的浪费
+从本地加载数据：load data local inpath '/home/juston/Test/sogouq.sample' overwrite into table sogouq;
+从hdfs加载数据：load data inpath 'hdfs://localhost:9000/data/sogouq.reduced' into table sogouq;
+数据查询： select count(*) from sogouq; #需要调用mapreduce进行计算
+	 select * from sogouq limit 5; #直接返回数据不会调用mapreduce进行计算
+         select count(*) count,keyword from sogouq group by keyword having count>10000 order by count; #HQL支持很多高级的查询语句  
+Hive还支持从命令行执行HQL语句，或者通过命令行执行已经写好的批量HQL脚本文件如：
+$HIVE_HOME/bin/hive -e 'select sogouq.uid from sogouq'
+$HIVE_HOME/bin/hive -S -e 'select sogouq.uid from sogouq'>out.data
+$HIVE_HOME/bin/hive -f ./hive-script.sql #sql脚本即可以在本地，也可以在hdfs，S3等文件系统
+如此就可以在Bash shell中写一些批处理程序，来执行对Hive数据库的批量操作。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

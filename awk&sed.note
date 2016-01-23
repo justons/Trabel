@@ -1,6 +1,6 @@
 awk笔记【2015年11月29日 星期日 14时40分33秒】
 一、awk常用知识点
-（1）awk小常识
+（1）awk常识
 awk与其执行命令之间要有空格如awk ‘{print}’ filename
 $0代表全行，默认print可以不带参数，打印全行
 awk中字符串连接可以直接使用空格，如print s1 s2即打印s1与s2连接的结果
@@ -10,6 +10,7 @@ expression～/regexpr/表示表达式与正则表达式相匹配，！～表示�
 ARGC		命令行参数个数
 ARGV		命令行参数，ARGV[ARGC-1]为命令行最后一个参数
 FILENAME	当前输入文件名
+NR		number of current record当前行号
 FNR		file number record(row)当前文件行数
 FS		field separator列分隔符，默认为空格
 RS		record separator输入行分隔符
@@ -18,20 +19,36 @@ OFMT		output format for numbers默认数字输出格式化的形式，默认为�
 OFS		output fiels separater输出列分隔符，默认空格
 ORS		output record separator输出行分隔符，默认“\n”
 SUBSEP		subscript seperator
+RSTART		match函数匹配的起始位置
+RLENGTH		match函数匹配的字符长度
 （3）awk函数
+awk支持自增自减运算符，以及+=，-=，**=等双目运算符和？：三目运算符
 数学函数:atan2(y,x),cos(x),exp(x),int(x),log(x),rand(),sin(x),sqrt(x),srand(x),其中rand()产生[0,1)的随机数
 字符串函数：gsub，index，length，match，split，sprintf，sub，substr等
-（4）awk命令行模式
+gsub('fromregex','to',str)	将str中fromregex全部替换为to,fromregex支持正则,str可选，不输入时默认使用$0
+sub('fromregex','to',str)	只替换第一个
+substr(str,start,len)		从str中start位置开始截取len长度的子串，len可选，不输则截至字符串尾部
+match(str,regex)		返回str中第一个能匹配regex的最长子串的起始位置，无匹配返回0
+split(str,arr,regex)		将str按正则串regex进行划分后填入arr数组
+getline 读取下一行，awk'{getline;print $0}' filename 则只输出偶数行，同理print $0;getline则输出奇数行
+next 跳过当前行，awk'{if($0~/^$/)next;print $0} filename 则会跳过空行
+system 运行系统命令，并获取返回值，awk'BEGIN{ret=system("date");print "Retrun:" ret}',首先打印当前日期，再打印返回值
+用户可以自定义函数，格式如：
+function function_name(arg1,arg2,...){
+  function_body
+}
+（4）awk命令行模式及参数
 awk ‘program’ f1 f2...
 awk -f progfile f1 f2...      #执行progfile中的awk程序
 awk -Fsep 'program' f1 f2...  #sep指定了输入文件的列分隔符
 awk -Fsep -f progfile f1 f2...
+awk -v name=Jerry 'BEGIN{printf "Name = %s\n", name}' #可以通过-v参数来预设变量及其值
 二、awk语法
 awk程序有一系列模式pattern和动作action组成，awk、一次读入一行数据，按顺序执行pattern-action组合
 pattern {action}
 pattern {action}
 ...
-pattern控制action是否执行，当满足pattern条件时关联的action才会执行。
+pattern控制action是否执行，当满足pattern条件时关联的action才会执行。action可以为多条语句，分号分割
 其中pattern有如下几种：
 （1）BEGIN{statements}               #各个statement之间用分号；分隔
 （2）END{statements}		    #所有行处理结束之后才执行
@@ -52,6 +69,7 @@ awk默认输出到标准输出，也可以输出到文件或者输出到管道�
 print expression，expression2，...>outputfile  #覆盖模式
 print expression，expression2，...>>outputfile #追加模式
 print expression，expression2，...|outputfile  #管道模式
+awk '$0!～/^$/{print $0>"awk.out"}’ filename
 三、AWK用例
 1、统计搜狗搜索用户查询日志的高频搜索词，数据格式为
 访问时间\t用户ID\t[查询词]\t该URL在返回结果中的排名\t用户点击的顺序号\t用户点击的URL
@@ -61,6 +79,21 @@ awk '{x[$3]++}END{for(name in x) print name,x[name]}' sogouq.reduced |sort -n -r
 -rw-r--r-- 1 root   root    264 12月 12 17:11 argct.c
 -rw-r--r-- 1 root   root    242 12月 12 17:11 argvt.c
 ls -l|awk 'NR!=1{x[$6 $7]++}END{for(var in x)print x[var],var}'
+3.split的一个例子
+awk 'BEGIN {
+str = "One,Two,Three,Four";
+split(str, arr, ",");
+print "Array contains following values:";
+for (i in arr) {
+    print arr[i];
+   }
+}'
+
+
+
+
+
+
 
 
 
@@ -72,7 +105,6 @@ sed [options] -f scriptfile file(s)
 另外在sed中可以组合多个表达式，如：sed ‘expression1’|sed ‘expression2’等价于sed ‘expression1；expression2’
 -e选项允许在同一行里执行多条命令 sed -e ‘1,5d’ -e ‘s/test/check/’ file
 与-e等价的命令是--expression：sed --expression=‘1,5d’ --expression=‘s/test/check/’ file
-
 sed命令
 a\ 在当前行下面插入文本。 
 i\ 在当前行上面插入文本。 

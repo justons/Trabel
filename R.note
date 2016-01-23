@@ -1,0 +1,9 @@
+一、数据类型
+R数据对象：Vectors，Lists，Matrces,Arrays,Factors,Data Frames。其中最简单的数据对象为Vector，组成Vector的数据类型有Logical，Numeric，Integer，Complex，Character，Raw等六种，因此有六种原子向量类，其他所有R对象都由这六种原子向量组成。
+变量管理：
+ls()			列出所有变量
+ls(pattern="var")	利用模式匹配列出符合条件的变量
+ls(all.name=TRUE)	以.开头的变量为隐藏变量，可以使用该命令列出隐藏变量
+rm(var)			移除变量
+rm(list=ls())		移除所有变量
+

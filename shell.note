@@ -1,7 +1,8 @@
 shell命令
 0.ubuntu常识
- Ubuntu命令行终端中复制粘贴的快捷键是ctrl+shift+c和ctrl+shift+v
- 在 Linux 系统中，~ 代表的是用户的主目录，即 “/home/用户名” 这个目录
+Ubuntu命令行终端中复制粘贴的快捷键是ctrl+shift+c和ctrl+shift+v
+在 Linux 系统中，~ 代表的是用户的主目录，即 “/home/用户名” 这个目录
+将用户加入sudoer目录，root用户下编辑/etc/sudoers文件，将当前用户添加进去
 1.PS1常用字符
  \h The local hostname
  \H The fully qualified domain hostname
@@ -35,7 +36,7 @@ file 命令可以查看文件类型，文本文件、可执行文件、数据文
 chmod为文件添加读写执行权限，有两种使用方式：
 chmod 777 file1 这种以八进制形式设置比较直观
 chmod ugoa+-wrx filename 以符号形式设置权限，其中u代表用户，g代表组，o代表其他，a代表上述素有，+代表添加权限，-代表删除权限。例如为某一用户或某一用户组添加文件权限chmod u+w filenmae，chmod g+x filename，chmod o+r filename  
-chown 改变文件的属主，chown username|UID filename
+chown 改变文件的属主，chown username:groupname filename,或者chown UID:GID filename
 chgrp 改变文件的属组，chgrp groupname|GID filename
 7.搜索
 find /home -name "*.txt"  #在home目录下查找txt文件
@@ -85,6 +86,8 @@ value1=10；value2=$value1 #多个命令间可以用分号间隔
 如果在shell中要将命令的输出值赋给一个变量，需要用到反引号``，例如value1=`date`
 在bash中，将一个数学运算结果赋值给某个变量时，可以使用美元符号和方括号将数学表达式圈起来
 var1=$[1+5];var2=$[$var1*2]
+简单的运算也可以通过表达式来求得结果，例如
+value2=`expr $value1 + 10`
 bash shell能处理的数仅有整数。解决bash中数学运算的整数限制方法之一是用内建的bc计算器，浮点运算是由一个内建的scale变量控制的，必须将这个值设为运算结果中需要保留的小数位数
 echo "scale=4;3.44/5"|bc
 shell中运行的每个命令都使用退出状态码来告诉shell它完成了处理，退出状态码为一个0~255之间的数值，在命令结束时由命令传给shell，可以捕获并在脚本中使用这个值。Linux提供了$?专属命令来保存上个执行的命令的退出状态码。默认情况下，shell脚本会以脚本中最后一个命令的退出状态码退出，也可以用exit命令指定一个退出状态码
@@ -153,7 +156,7 @@ for var in list   或者  for var in list;do
 do			   commands
   commands		done
 done
-向已有变量列表list中添加一个值的方法为list=$list"another variable"。for语句假定list中每个值都是空格分割的，如果在单独的数据值中有空格需要使用双引号扩起来。但如果从文件或其他源读入的变量中有空格，前述方法显然不行。原因是特殊的shell环境变量IFS定义了字段分隔符的一序列字符，默认情况下shell会将空格、制表符、换行符作为分隔符。可以在脚本中临时改变IFS的值，如
+将两个字符串串起来可以直接将两个字符串或字符串变量写到一起，如newstr=$oldstr'appendstr';向已有变量列表list中添加一个值的方法为list=$list"another variable"。for语句假定list中每个值都是空格分割的，如果在单独的数据值中有空格需要使用双引号扩起来。但如果从文件或其他源读入的变量中有空格，前述方法显然不行。原因是特殊的shell环境变量IFS定义了字段分隔符的一序列字符，默认情况下shell会将空格、制表符、换行符作为分隔符。可以在脚本中临时改变IFS的值，如
 IFS.OLD=$IFS
 IFS=$'\n'
 do something
@@ -241,7 +244,7 @@ trap "echo byebye" EXIT
 2、后台模式运行脚本
 要在命令行界面以后台模式运行脚本，只要在命令后加一个&标识符就行了，如
 ./myscript &
-在这种方式下，当后台进程仍在运行时，他仍会用终端显示器来显示STDOUT和STDERR消息，且每个后台进程都绑定到了该终端回话上的终端上，一旦进程回话退出，后台进程也会退出。为了在会话中启动shell脚本，然后让脚本一直以后台模式运行，直到完成，即使退出终端回话也不会终止后台进程，可以使用nohup命令来实现。如
+在这种方式下，当后台进程仍在运行时，他仍会用终端显示器来显示STDOUT和STDERR消息，且每个后台进程都绑定到了该终端回话上的终端上，一旦进程回话退出，后台进程也会退出。为了在会话中启动shell脚本，然后让脚本一直以后台模式运行，直到完成，即使退出终端会话也不会终止后台进程，可以使用nohup命令来实现。如
 nohup ./myscript &
 由于nohup会解除进程关联，进程会丢掉到STDOUT和STDERR的连接，为了保存该命令的输出，nohup会自动将消息重定向到一个名为nohup.out的文件中。
 3.作业控制

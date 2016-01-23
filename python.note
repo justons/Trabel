@@ -1,0 +1,116 @@
+一
+python支持四种数据类型int、long、float和complex。随机数函数有:
+choice(seq) 				A random item from a list, tuple, or string.
+randrange ([start,] stop [,step]) 	A randomly selected element from range(start, stop,step)
+random() 				A random float r，[0,1）
+seed([x]) 				Sets the integer starting value used in generating random numbers. 
+shuffle(lst) 				Randomizes the items of a list in place. Returns None.
+uniform(x, y) 				A random float r,[x,y)
+Python中最常见的数据结果是sequence，python有六种内置的sequence：List，tuple，
+字典的value可以为任何类型，但key必须为不可变的数据类型，如字符串，数字或元组
+Python2中普通字符串默认内部存储为8-bit的ASCII字符，Unicode字符串存储为16-bie的Unicode字符。
+字符串的特殊操作符
++	Concatenation, a+b will get HelloPython
+*	Repetition,a*2 will give HelloHello
+[]	Slice,a[1] will get e
+[:]	Range Slice,a[1:4] will give ell
+in	Membership,H in a will give 1
+not in	Membership,H not in a will give 0
+r/R	Raw String,print r'\n' will prints \n
+%	Format,Performs String formating.
+1.解决编码问题
+UnicodeDecodeError: 'ascii' codec can't decode byte 0xe2 in position 4: ordinal not in range(128)
+报错原因在于python的str默认是ascii编码和unicode编码冲突，字符串转换时常会报这个错，可用str.__class__查看被转换字符串的编码方式验证。解决办法：
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
+
+
+
+
+
+13  date and time
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

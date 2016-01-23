@@ -1,0 +1,9 @@
+一、Spark配置
+1、spar-env.sh中添加如下配置
+export SCALA_HOME=/usr/local/lib/scala-2.11.7
+export JAVA_HOME=/usr/lib/jvm/jdk1.7.0_76
+export SPARK_MASTER_IP=127.0.0.1
+export SPARK_WORKER_MEMORY=10G
+
+SparkSQL:
+
